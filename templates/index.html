@@ -8,14 +8,12 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <h1> Second Thought</h1>
             <p class="tagline">Local AI Decision Analysis (Offline)</p>
             <button class="btn" onclick="showModal('decisionModal')">+ New Decision</button>
         </div>
 
-        <!-- Decisions List -->
         {% if decisions|length == 0 %}
             <div class="card empty-state">
                 <h2>No decisions yet</h2>
@@ -125,7 +123,6 @@
         {% endif %}
     </div>
 
-    <!-- Decision Modal -->
     <div id="decisionModal" class="modal">
         <div class="modal-content">
             <h2> Log a Decision</h2>
@@ -164,7 +161,6 @@
         </div>
     </div>
 
-    <!-- Reflection Modal -->
     <div id="reflectionModal" class="modal">
         <div class="modal-content">
             <h2> Add Reflection</h2>
