@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Thought - Decision Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1> Second Thought</h1>
+            <p class="tagline">Local AI Decision Analysis (Offline)</p>
+            <button class="btn" onclick="showModal('decisionModal')">+ New Decision</button>
+        </div>
+
+        <!-- Decisions List -->
+        {% if decisions|length == 0 %}
+            <div class="card empty-state">
+                <h2>No decisions yet</h2>
+                <p>Click "New Decision" to start tracking your thinking patterns</p>
+            </div>
+        {% else %}
+            {% for d in decisions %}
+                <div class="card decision-card">
+                    <div class="decision-header">
+                        <h3>{{ d.title }}</h3>
+                        <span class="date-badge">{{ d.date_created[:10] }} • {{ d.stakes }} stakes</span>
+                    </div>
+
+                    <div class="decision-content">
+                        <p><strong>Context:</strong> {{ d.context }}</p>
+                        <p><strong>Decision:</strong> {{ d.decision }}</p>
+                    </div>
+
+                    {% if d.initial_analysis %}
+                        <div class="analysis-grid">
+                            <div class="analysis-box emotional">
+                                <div class="score">{{ d.initial_analysis.emotional.score }}%</div>
+                                <div class="label"> Emotional</div>
+                            </div>
+                            <div class="analysis-box logical">
+                                <div class="score">{{ d.initial_analysis.logical.score }}%</div>
+                                <div class="label"> Logical</div>
+                            </div>
+                            <div class="analysis-box intellectual">
+                                <div class="score">{{ d.initial_analysis.intellectual.score }}%</div>
+                                <div class="label">Intellectual</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-source">
+                            <strong>Analysis Source:</strong>
+                            {% if d.initial_analysis.analysis_source == "ai" %}
+                                <span class="badge-ai"> Local AI</span>
+                            {% else %}
+                                <span class="badge-rule"> Rule-Based</span>
+                            {% endif %}
+                        </div>
+
+                        {% if d.initial_analysis.raw_ai_output %}
+                            <details class="raw-output">
+                                <summary>View Raw AI Output</summary>
+                                <pre>{{ d.initial_analysis.raw_ai_output }}</pre>
+                            </details>
+                        {% endif %}
+
+                        {% if d.initial_analysis.biasIndicators %}
+                            <div class="bias-tags">
+                                {% for bias in d.initial_analysis.biasIndicators %}
+                                    <span class="bias-tag"> {{ bias }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if not d.has_reflection %}
+                        <button class="btn btn-reflection" onclick="showReflection({{ d.id }})">
+                             Add Reflection
+                        </button>
+                    {% else %}
+                        <div class="reflection-box">
+                            <h4>✓ Reflection Added</h4>
+                            <p><strong>Outcome:</strong> {{ d.reflection.actual_outcome }}</p>
+                            <p><strong>Perspective:</strong> {{ d.reflection.revised_perspective }}</p>
+
+                            {% if d.reflection.reflection_analysis %}
+                                {% set ra = d.reflection.reflection_analysis %}
+                                {% set ia = d.initial_analysis %}
+                                <div class="analysis-grid drift-grid">
+                                    <div class="analysis-box emotional">
+                                        <div class="score">{{ ra.emotional.score }}%</div>
+                                        <div class="drift">
+                                            {% set drift = ra.emotional.score - ia.emotional.score %}
+                                            <span class="{% if drift > 0 %}drift-up{% else %}drift-down{% endif %}">
+                                                {% if drift > 0 %}↑{% else %}↓{% endif %} {{ drift|abs }} pts
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-box logical">
+                                        <div class="score">{{ ra.logical.score }}%</div>
+                                        <div class="drift">
+                                            {% set drift = ra.logical.score - ia.logical.score %}
+                                            <span class="{% if drift > 0 %}drift-up{% else %}drift-down{% endif %}">
+                                                {% if drift > 0 %}↑{% else %}↓{% endif %} {{ drift|abs }} pts
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-box intellectual">
+                                        <div class="score">{{ ra.intellectual.score }}%</div>
+                                        <div class="drift">
+                                            {% set drift = ra.intellectual.score - ia.intellectual.score %}
+                                            <span class="{% if drift > 0 %}drift-up{% else %}drift-down{% endif %}">
+                                                {% if drift > 0 %}↑{% else %}↓{% endif %} {{ drift|abs }} pts
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Decision Modal -->
+    <div id="decisionModal" class="modal">
+        <div class="modal-content">
+            <h2> Log a Decision</h2>
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="title" placeholder="e.g., Quitting my job">
+            </div>
+            <div class="form-group">
+                <label>Context *</label>
+                <textarea id="context" rows="2" placeholder="What was happening?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Decision *</label>
+                <textarea id="decision" rows="2" placeholder="What did you decide?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Stakes</label>
+                <select id="stakes">
+                    <option value="low">Low - Minor impact</option>
+                    <option value="medium" selected>Medium - Moderate impact</option>
+                    <option value="high">High - Significant impact</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Your Reasoning *</label>
+                <textarea id="fullReasoning" rows="5" placeholder="Explain your complete thought process..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Expected Outcome *</label>
+                <textarea id="expectedOutcome" rows="2" placeholder="What do you expect will happen?"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="submitDecision()"> Save & Analyze</button>
+                <button class="btn btn-secondary" onclick="closeModal('decisionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reflection Modal -->
+    <div id="reflectionModal" class="modal">
+        <div class="modal-content">
+            <h2> Add Reflection</h2>
+            <input type="hidden" id="reflectionId">
+            <div class="form-group">
+                <label>What Actually Happened? *</label>
+                <textarea id="actualOutcome" rows="3" placeholder="Describe the actual outcome..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>How Do You See It Now? *</label>
+                <textarea id="revisedPerspective" rows="3" placeholder="Your perspective with hindsight..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Lessons Learned</label>
+                <textarea id="lessonsLearned" rows="2" placeholder="What did you learn?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Would You Decide the Same Way? *</label>
+                <select id="wouldDecideSame">
+                    <option value="yes">Yes, absolutely</option>
+                    <option value="mostly">Mostly yes</option>
+                    <option value="unsure">Unsure</option>
+                    <option value="probably-not">Probably not</option>
+                    <option value="no">Definitely not</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="submitReflection()"> Save Reflection</button>
+                <button class="btn btn-secondary" onclick="closeModal('reflectionModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
