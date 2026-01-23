@@ -1,4 +1,3 @@
-
 function showModal(modalId) {
     document.getElementById(modalId).classList.add('active');
 }
@@ -12,7 +11,6 @@ function showReflection(decisionId) {
     showModal('reflectionModal');
 }
 
-
 async function submitDecision() {
     const data = {
         title: document.getElementById('title').value,
@@ -22,7 +20,6 @@ async function submitDecision() {
         expected_outcome: document.getElementById('expectedOutcome').value,
         stakes: document.getElementById('stakes').value
     };
-
 
     if (!data.title || !data.context || !data.decision || !data.full_reasoning || !data.expected_outcome) {
         alert('Please fill in all required fields marked with *');
@@ -38,6 +35,16 @@ async function submitDecision() {
             body: JSON.stringify(data)
         });
 
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error('Server returned non-JSON response');
+            const text = await response.text();
+            console.error('Response body:', text);
+            alert('Server error. Please check the console and try again.');
+            return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -51,7 +58,6 @@ async function submitDecision() {
     }
 }
 
-
 async function submitReflection() {
     const decisionId = document.getElementById('reflectionId').value;
     const data = {
@@ -60,7 +66,6 @@ async function submitReflection() {
         lessons_learned: document.getElementById('lessonsLearned').value,
         would_decide_same: document.getElementById('wouldDecideSame').value
     };
-
 
     if (!data.actual_outcome || !data.revised_perspective || !data.would_decide_same) {
         alert('Please fill in all required fields marked with *');
@@ -95,12 +100,60 @@ window.onclick = function(event) {
         event.target.classList.remove('active');
     }
 }
-//esc
-document.addEventListener('keydown', function(event) {
 
+
+document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         document.querySelectorAll('.modal.active').forEach(modal => {
             modal.classList.remove('active');
         });
     }
 });
+
+
+async function getAIAdvice() {
+    const question = document.getElementById('adviceQuestion').value.trim();
+
+    if (!question) {
+        alert('Please enter your question');
+        return;
+    }
+
+    const btn = document.getElementById('getAdviceBtn');
+    const loading = document.getElementById('adviceLoading');
+    const result = document.getElementById('adviceResult');
+
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    loading.style.display = 'block';
+    result.style.display = 'none';
+
+    try {
+        const response = await fetch('/get_advice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: question })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('adviceText').textContent = data.advice;
+            document.getElementById('adviceMeta').textContent =
+                `✓ Analyzed ${data.decisions_analyzed} of your past decisions`;
+
+            result.style.display = 'block';
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Advice request error:', error);
+        alert('Error getting advice: ' + error.message);
+    } finally {
+        loading.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'Get Advice';
+    }
+}
