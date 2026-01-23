@@ -1,4 +1,3 @@
-/* Base reset */
 
 * {
     margin: 0;
@@ -317,7 +316,7 @@ body {
 }
 
 
-/* Mini graphs */
+/* graphs */
 
 .mini-graph {
     width: 100%;
@@ -435,4 +434,29 @@ body {
     .modal-actions {
         flex-direction: column;
     }
+}
+
+html, body {
+    min-height: 100%;
+    background-color: #050107; 
+}
+
+body {
+    background: linear-gradient(135deg, #050107 0%, #000000 70%, #37114f 100%);
+    background-attachment: fixed;
+}
+
+
+input, textarea, select, button {
+    font-family: inherit;
+}
+
+
+.container {
+    min-height: calc(100vh - 40px);
+}
+
+
+body {
+    overscroll-behavior: none;
 }
