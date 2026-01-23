@@ -5,7 +5,7 @@ function showModal(modalId) {
 
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
-}
+} 
 
 function showReflection(decisionId) {
     document.getElementById('reflectionId').value = decisionId;
