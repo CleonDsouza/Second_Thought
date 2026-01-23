@@ -181,17 +181,22 @@ Reasoning:
     fallback["raw_ai_output"] = ""
     return fallback
 
-
 def init_db():
     conn = sqlite3.connect('decisions.db')
     c = conn.cursor()
-    c.execute('create table if not exists decisions (id integer primary key autoincrement, user_id text not null, title text not null, context text not null, decision text not null, full_reasoning text not null, expected_outcome text not null, stakes text not null, date_created timestamp default current_timestamp, initial_analysis text, has_reflection boolean default 0)')
-    c.execute('create table if not exists reflections (id integer primary key autoincrement, decision_id integer not null, user_id text not null, actual_outcome text not null, revised_perspective text not null, lessons_learned text, would_decide_same text not null, date_created timestamp default current_timestamp, reflection_analysis text)')
+
+    c.execute(
+        'create table if not exists decisions (id integer primary key autoincrement, user_id text not null, title text not null, context text not null, decision text not null, full_reasoning text not null, expected_outcome text not null, stakes text not null, date_created timestamp default current_timestamp, initial_analysis text, has_reflection boolean default 0)')
+
+    c.execute(
+        'create table if not exists reflections (id integer primary key autoincrement, decision_id integer not null, user_id text not null, actual_outcome text not null, revised_perspective text not null, lessons_learned text, would_decide_same text not null, date_created timestamp default current_timestamp, reflection_analysis text)')
+
     conn.commit()
     conn.close()
 
 
 init_db()
+
 
 def parse_ai_response(ai_text):
     try:
@@ -220,7 +225,6 @@ def parse_ai_response(ai_text):
     except Exception as e:
         print("Parse error:", e)
         return None
-
 
 @app.route('/login', methods=['POST'])
 def firebase_login():
@@ -296,7 +300,6 @@ def add_decision():
 
         conn = sqlite3.connect('decisions.db')
         c = conn.cursor()
-
         c.execute('insert into decisions (user_id, title, context, decision, full_reasoning, expected_outcome, stakes, initial_analysis) values (?, ?, ?, ?, ?, ?, ?, ?)',(user_id, data['title'], data['context'], data['decision'], data['full_reasoning'],data['expected_outcome'], data['stakes'], json.dumps(analysis)))
         conn.commit()
         conn.close()
@@ -331,7 +334,11 @@ def add_reflection(decision_id):
         combined = f"{data['actual_outcome']} {data['revised_perspective']}"
         analysis = analyze_with_local_ai(combined)
 
-        c.execute('insert into reflections (decision_id, user_id, actual_outcome, revised_perspective, lessons_learned, would_decide_same, reflection_analysis) values (?, ?, ?, ?, ?, ?, ?)',(decision_id, user_id, data['actual_outcome'], data['revised_perspective'], data.get('lessons_learned', ''),data['would_decide_same'], json.dumps(analysis)))
+        c.execute(
+            'insert into reflections (decision_id, user_id, actual_outcome, revised_perspective, lessons_learned, would_decide_same, reflection_analysis) values (?, ?, ?, ?, ?, ?, ?)',
+            (decision_id, user_id, data['actual_outcome'], data['revised_perspective'], data.get('lessons_learned', ''),
+             data['would_decide_same'], json.dumps(analysis)))
+
         c.execute('update decisions set has_reflection = 1 where id = ?', (decision_id,))
         conn.commit()
         conn.close()
@@ -393,6 +400,7 @@ Analyze their past decision patterns (emotional vs logical tendencies, biases, o
 3. Specific recommendation for this question
 
 Keep your response conversational and insightful (200-300 words)."""
+
         response = requests.post(
             "http://localhost:11434/api/chat",
             json={
@@ -404,6 +412,7 @@ Keep your response conversational and insightful (200-300 words)."""
             },
             timeout=90
         )
+
         ai_data = response.json()
         advice_text = ai_data["message"]["content"]
 
