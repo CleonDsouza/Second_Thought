@@ -200,12 +200,12 @@ init_db()
 
 def parse_ai_response(ai_text):
     try:
-        emotional = int(re.search(r'Emotional[:\s]*([0-9]+)', ai_text, re.I).group(1))
-        logical = int(re.search(r'Logical[:\s]*([0-9]+)', ai_text, re.I).group(1))
-        intellectual = int(re.search(r'Intellectual[:\s]*([0-9]+)', ai_text, re.I).group(1))
-        confidence = int(re.search(r'Confidence[:\s]*([0-9]+)', ai_text, re.I).group(1))
+        emotional = extract_int(r'Emotional[:\s]*([0-9]{1,3})', ai_text)
+        logical = extract_int(r'Logical[:\s]*([0-9]{1,3})', ai_text)
+        intellectual = extract_int(r'Intellectual[:\s]*([0-9]{1,3})', ai_text)
+        confidence = extract_int(r'Confidence[:\s]*([0-9]{1,3})', ai_text, 50)
 
-        mode_match = re.search(r'Mode[:\s]*([a-zA-Z]+)', ai_text, re.I)
+        mode_match = re.search(r'Mode[:\s]*(emotional|logical|intellectual)', ai_text, re.I)
         mode = mode_match.group(1).lower() if mode_match else "logical"
 
         biases_match = re.search(r'Biases[:\s]*(.+)', ai_text, re.I)
@@ -214,18 +214,23 @@ def parse_ai_response(ai_text):
             biases = [b.strip() for b in re.split(r'[,;\n]', biases_match.group(1)) if b.strip()]
 
         return {
-            "emotional": {"score": emotional},
-            "logical": {"score": logical},
-            "intellectual": {"score": intellectual},
-            "confidence": confidence,
+            "emotional": {"score": min(100, emotional)},
+            "logical": {"score": min(100, logical)},
+            "intellectual": {"score": min(100, intellectual)},
+            "confidence": min(100, confidence),
             "dominantMode": mode,
             "biasIndicators": biases
         }
 
     except Exception as e:
         print("Parse error:", e)
+        print("RAW AI OUTPUT ↓↓↓")
+        print(ai_text)
         return None
 
+def extract_int(pattern, text, default=0):
+    match = re.search(pattern, text, re.I)
+    return int(match.group(1)) if match else default
 @app.route('/login', methods=['POST'])
 def firebase_login():
     token = request.json.get('token')
