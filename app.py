@@ -155,7 +155,7 @@ Reasoning:
         response = requests.post(
             "http://localhost:11434/api/chat",
             json={
-                "model": "llama3.2:3b",
+                "model": "mistral",
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
@@ -409,13 +409,13 @@ Keep your response conversational and insightful (200-300 words)."""
         response = requests.post(
             "http://localhost:11434/api/chat",
             json={
-                "model": "llama3.2:3b",
+                "model": "mistral",
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
                 "stream": False
             },
-            timeout=90
+            timeout=180
         )
 
         ai_data = response.json()
